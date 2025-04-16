@@ -1,0 +1,16 @@
+diffusers==0.21.2
+transformers==4.30.2
+accelerate==0.23.0
+pandas==2.0.3
+soundfile==0.12.1
+--extra-index-url https://download.pytorch.org/whl/cu121
+torch==2.2.0+cu121
+torchaudio==2.2.0+cu121
+torchvision==0.17.0+cu121
+numpy==1.23.5
+audioldm
+ruamel.yaml
+laion-clap==1.1.6
+torchaudio-augmentations==0.2.4
+tensorboard==2.14.0
+huggingface-hub==0.30.1
