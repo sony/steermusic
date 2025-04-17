@@ -29,7 +29,7 @@ python SteerMusic_edit.py --audio_path '/path/to/source/music/' --prompt 'target
 
 Example 
 ```
-python SteerMusic_edit.py --audio_path "./audios/bach_anh114.wav" --prompt "Energetic harp cover with a groovy, reverberant melody." --prompt_ref "Energetic piano cover with a groovy, reverberant melody." --guidance_scale 30  --weight_aug 3
+python SteerMusic_edit.py --audio_path "./audios/bach_anh114.wav" --prompt "Energetic guitar cover with a groovy, reverberant melody." --prompt_ref "Energetic piano cover with a groovy, reverberant melody." --guidance_scale 30  --weight_aug 3
 ```
 
 ## SteerMusic+ for Personalized Music Editing
@@ -43,7 +43,7 @@ To perform a fine-grained personalized music editing, please run
 python SteerMusic_personalized.py --audio_path '/path/to/source/music/' --prompt_ref 'source prompt with [emphasized] edit area, e.g., a recording of [piano] music' --concept 'target concept' --personalized_ckpt '/path/to/personalized/diffusion/ckpt/' --guidance_scale 15
 ```
 
-This is an example command. We provide an example of fine-tuned DreamSound ckpt on [bouzouki] concept which can be downloaded via the [link](https://zenodo.org/records/15226658). Please unzip the downloaded ckpt file and put to the path `./DreamSound/outputs_bouzouki/`, then execute the codes as below:
+This is an example command. We provide an example of fine-tuned DreamSound ckpt on [bouzouki] concept which can be downloaded via the [link](https://zenodo.org/records/15226658). The reference audio examples for bouzouki are available inside the folder `audios`. Please unzip the downloaded ckpt file and put to the path `./DreamSound/outputs_bouzouki/`, then execute the codes as below:
 
 ```
 python SteerMusic_personalized.py --audio_path "./audios/bach_anh114.wav" --prompt_ref "Energetic [piano] cover with a groovy, reverberant melody." --concept 'bouzouki' --personalized_ckpt './Dreamsound/outputs_bouzouki/pipeline_step_100' --guidance_scale 20
