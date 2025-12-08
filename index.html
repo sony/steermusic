@@ -1,0 +1,1371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>SteerMusic: Enhanced Source Music Condition From Zero-shot
+    Text-guided to Personalized Music Editing</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      padding: 3%;
+      margin-left: 15%;
+      margin-right: 15%;
+    }
+    h1 {
+      margin-bottom: 5%;
+    }
+    h2 {
+      font-weight: normal;
+      /* font-size: 1.2em; */
+      color: #444;
+      margin-top: 3%;
+      margin-bottom: 3%;
+    }
+    .abstract{
+        margin-left: 10%;
+        margin-right: 10%;
+        color: #444;
+    }
+    .reference{
+        margin-left: 5%;
+        margin-right: 5%;
+        color: #444;
+        text-align: left;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 30px;
+    }
+    hr {
+    width: 100%;
+    border: none;
+    border-top: 1px solid #ccc;
+    margin: 1em 0;
+    }
+    th, td {
+      padding: 12px;
+      vertical-align: top;
+    }
+    th {
+      font-weight: bold;
+      border-bottom: 2px solid #ccc;
+    }
+    audio {
+      width: 100%;
+    }
+    .caption {
+      font-size: 0.9em;
+      color: #555;
+      margin-top: 5px;
+    }
+    .auto-wrap {
+        max-width: 200px;     /* Optional: limit width */
+        word-wrap: break-word;
+        white-space: normal;
+        text-align: center;   /* Optional: center text inside the box */
+        margin: auto;         /* Optional: center the box horizontally */
+    }
+    audio.fixed-width {
+      width: 100%; /* Set your desired fixed width here */
+    }
+    audio.fixed-width2 {
+      width: 100%; /* Set your desired fixed width here */
+    }
+    audio.fixed-width3 {
+      width: 130pt; /* Set your desired fixed width here */
+    }
+    .spectrogram-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+        }
+        .spectrogram-item {
+            text-align: center;
+            flex: 1;
+            margin: 0 10px;
+        }
+        .spectrogram-item img {
+            width: 100%;
+            height: auto;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .section {
+            margin-bottom: 50px;
+        }
+        .toc {
+            border: 1px solid #ccc;
+            padding: 20px;
+            max-width: 50%;
+            background-color: #f9f9f9;
+            margin-left: 23%;
+            margin-right: 23%;
+        }
+        .toc h2 {
+            margin-top: 0;
+        }
+        .toc ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        .toc ul li {
+            margin: 10px 0;
+        }
+        .toc ul li a {
+            text-decoration: none;
+            color: #007bff;
+        }
+        .toc ul li a:hover {
+            text-decoration: underline;
+        }
+  </style>
+</head>
+<body>
+
+  <h1>Demonstration Page</h1>
+  <h1>SteerMusic: Enhanced Musical Consistency for Zero-shot Text-guided and Personalized Music Editing</h1>
+ 
+  <div style="text-align:center; font-family: serif;">
+      <strong>
+          Xinlei Niu<sup>1</sup>, 
+          Kin Wai Cheuk<sup>2</sup>, 
+          Jing Zhang<sup>1</sup>, 
+          Naoki Murata<sup>2</sup>, 
+          Chieh-Hsin Lai<sup>2</sup>, 
+          Michele Mancusi<sup>3</sup>, 
+          Woosung Choi<sup>2</sup>, 
+          Giorgio Fabbro<sup>3</sup>, 
+          Wei-Hsiang Liao<sup>2</sup>, 
+          Charles Patrick Martin<sup>1</sup>, 
+          Yuki Mitsufuji<sup>2</sup>
+      </strong>
+      <br><br>
+
+      <span><sup>1</sup>Australian National University, Canberra, Australia;</span><br>
+      <span><sup>2</sup>Sony AI, Tokyo, Japan;</span><br>
+      <span><sup>3</sup>Sony Europe B.V., Stuttgart, Germany</span><br><br>
+    
+      <span>xinlei.niu@anu.edu.au</span>
+    <br><br>
+
+    <!-- Add links here -->
+    <div style="margin-top:8px;">
+        <a href="https://github.com/sony/steermusic" target="_blank">[Code]</a>
+        &nbsp;&nbsp;
+        <a href="https://arxiv.org/abs/2504.10826" target="_blank">[arXiv]</a>
+    </div>
+  </div>
+
+  <h2>Abstract</h2>
+  <div class="abstract">
+  <p style="text-align: justify;">
+     Music editing is an important step in music production, which has broad applications, including game development and film production. 
+     Most existing zero-shot text-guided editing methods rely on pretrained diffusion models by involving forward-backward diffusion processes. 
+     However, these methods often struggle to preserve the musical content. Additionally, text instructions alone usually fail to accurately describe the desired music. 
+     In this paper, we propose two music editing methods that improve the consistency between the original and edited music by leveraging score distillation. 
+     The first method, <i>SteerMusic</i>, is a coarse-grained zero-shot editing approach using delta denoising score. 
+     The second method, <i>SteerMusic+</i>, enables fine-grained personalized music editing by manipulating a concept token that represents a user-defined musical style. 
+     <i>SteerMusic+</i> allows for the editing of music into user-defined musical styles that cannot be achieved by the text instructions alone. 
+     Experimental results show that our methods outperform existing approaches in preserving both music content consistency and editing fidelity. 
+     User studies further validate that our methods achieve superior music editing quality. 
+  </p>
+</div>
+
+<hr>
+
+<div class="toc">
+    <h2>Contents</h2>
+    <ul>
+        <li><a href="#part1"> <b>Part 1. </b> SteerMusic: Zero-shot Text-guided Music Editing</a>
+            <ul>
+              <li>
+                <a href="#part1"> <b>1.1 </b> Samples sourced from MusicCaps.</a>
+              </li>
+              <li>
+                <a href="#part1.2"> <b>1.2 </b> Samples sourced from MusicDelta.</a>
+              </li>
+            </ul>
+        </li>
+
+        <li><a href="#part2"> <b>Part 2. </b> SteerMusic+: Personalized Music Editing</a>
+            <ul>
+              <li>
+                <a href="#part2"> <b>2.1</b> Samples sourced from MusicCaps.</a>
+              </li>
+              <li>
+                <a href="#part2.2"> <b>2.2 </b> Samples sourced from MusicDelta.</a>
+              </li>
+            </ul>
+        </li>
+        
+    </ul>
+</div>
+<p>* Please note that source musics from MusicCaps are sampled with 44.1k Hz and all the edited results are performed with the base model AudioLDM2 checkpoint, which are 16k Hz.</p>
+<hr>
+
+<h2> <b>Part 1</b>. SteerMusic: Zero-shot Text-guided Music Editing</h2>
+<div id="part1" class="abstract">
+<p style="text-align: justify;">
+This part contains demonstration of our SteerMusic method on zero-shot text-guided music editing task,  which the inputs are sourced from MusicCaps and MusicDelta dataset.
+</p>
+</div>
+
+
+<div class="section">
+    <h3><b>1.1</b> Samples sourced from MusicCaps</h3>
+    <p>The source music used in the following demonstrations is taken from MusicCaps.</p>
+    <div class="spectrogram-container">
+        <div class="spectrogram-item">
+            <p><b>Source Music</b></p>
+            <audio class="fixed-width" controls src="./SteerEdit_demo/Sample1/source.flac"></audio>
+        </div>
+        <div class="spectrogram-item">
+            <p><b>Source Prompt</b></p>
+            <!-- <p> <br></p> -->
+            <div class="caption">A recording of <b>piano</b> music with no percussion propeller sound and male narrative voice at the end at a moderate tempo.</div>
+        </div>
+        <div class="spectrogram-item">
+            <p><b>Target Prompt</b></p>
+            <!-- <p> <br></p> -->
+            <div class="caption">
+                A recording of <b>trumpet</b> music with no percussion propeller sound and male narrative voice at the end at a moderate tempo.
+            </div>
+        </div>
+        <div class="spectrogram-item">
+            <p> <br></p>
+        </div>
+        <div class="spectrogram-item">
+            <p> <br></p>
+        </div>
+
+    </div>
+    <div class="spectrogram-container">
+        <div class="spectrogram-item">
+            <p> <b>SteerMusic</b></p>
+            <audio class="fixed-width" controls src="./SteerEdit_demo/Sample1/dds.flac"></audio>
+        </div>
+        <div class="spectrogram-item">
+            <p> <b>MusicMagus</b></p>
+            <audio class="fixed-width" controls src="./SteerEdit_demo/Sample1/musicmagus.flac"></audio>
+        </div>
+        <div class="spectrogram-item">
+            <p><b>ZETA</b></p>
+            <audio class="fixed-width" controls src="./SteerEdit_demo/Sample1/ZETA.flac">></audio>
+        </div>
+        <div class="spectrogram-item">
+            <p><b>SDEdit</b></p>
+            <audio class="fixed-width" controls src="./SteerEdit_demo/Sample1/SDEdit.flac"></audio>
+        </div>
+        <div class="spectrogram-item">
+            <p><b>DDIM</b></p>
+            <audio class="fixed-width" controls src="./SteerEdit_demo/Sample1/DDIM.flac"></audio>
+        </div>
+    </div>
+</div>
+
+
+<div class="section">
+    <div class="spectrogram-container">
+        <div class="spectrogram-item">
+            <p><b>Source Music</b></p>
+            <audio class="fixed-width" controls src="./SteerEdit_demo/Sample2/source.flac"></audio>
+        </div>
+        <div class="spectrogram-item">
+            <p><b>Source Prompt</b></p>
+            <!-- <p> <br></p> -->
+            <div class="caption">A recording featuring acoustic guitar mellow <b>piano</b> with passionate male vocals and crowd noises.</div>
+        </div>
+        <div class="spectrogram-item">
+            <p><b>Target Prompt</b></p>
+            <!-- <p> <br></p> -->
+            <div class="caption">
+                A recording featuring acoustic guitar mellow <b>harp</b> with passionate male vocals and crowd noises.
+            </div>
+        </div>
+        <div class="spectrogram-item">
+            <p> <br></p>
+        </div>
+        <div class="spectrogram-item">
+            <p> <br></p>
+        </div>
+
+    </div>
+    <div class="spectrogram-container">
+        <div class="spectrogram-item">
+            <p> <b>SteerMusic</b></p>
+            <audio class="fixed-width" controls src="./SteerEdit_demo/Sample2/dds.flac"></audio>
+        </div>
+        <div class="spectrogram-item">
+            <p> <b>MusicMagus</b></p>
+            <audio class="fixed-width" controls src="./SteerEdit_demo/Sample2/musicmagus.flac"></audio>
+        </div>
+        <div class="spectrogram-item">
+            <p><b>ZETA</b></p>
+            <audio class="fixed-width" controls src="./SteerEdit_demo/Sample2/ZETA.flac">></audio>
+        </div>
+        <div class="spectrogram-item">
+            <p><b>SDEdit</b></p>
+            <audio class="fixed-width" controls src="./SteerEdit_demo/Sample2/SDEdit.flac"></audio>
+        </div>
+        <div class="spectrogram-item">
+            <p><b>DDIM</b></p>
+            <audio class="fixed-width" controls src="./SteerEdit_demo/Sample2/DDIM.flac"></audio>
+        </div>
+    </div>
+
+</div>
+
+
+
+<div class="section">
+    <div class="spectrogram-container">
+        <div class="spectrogram-item">
+            <p><b>Source Music</b></p>
+            <audio class="fixed-width" controls src="./SteerEdit_demo/Sample4/source.flac"></audio>
+        </div>
+        <div class="spectrogram-item">
+            <p><b>Source Prompt</b></p>
+            <!-- <p> <br></p> -->
+            <div class="caption">
+                A lively indian wedding band playing bhangra music with brass band and <b>percussive dhol</b>.
+            </div>
+        </div>
+        <div class="spectrogram-item">
+            <p><b>Target Prompt</b></p>
+            <!-- <p> <br></p> -->
+            <div class="caption">
+                A lively indian wedding band playing bhangra music with brass band and <b>percussive drums</b>.
+            </div>
+        </div>
+        <div class="spectrogram-item">
+            <p> <br></p>
+        </div>
+        <div class="spectrogram-item">
+            <p> <br></p>
+        </div>
+
+    </div>
+    <div class="spectrogram-container">
+        <div class="spectrogram-item">
+            <p> <b>SteerMusic</b></p>
+            <audio class="fixed-width" controls src="./SteerEdit_demo/Sample4/dds.flac"></audio>
+        </div>
+        <div class="spectrogram-item">
+            <p> <b>MusicMagus</b></p>
+            <audio class="fixed-width" controls src="./SteerEdit_demo/Sample4/musicmagus.flac"></audio>
+        </div>
+        <div class="spectrogram-item">
+            <p><b>ZETA</b></p>
+            <audio class="fixed-width" controls src="./SteerEdit_demo/Sample4/ZETA.flac">></audio>
+        </div>
+        <div class="spectrogram-item">
+            <p><b>SDEdit</b></p>
+            <audio class="fixed-width" controls src="./SteerEdit_demo/Sample4/SDEdit.flac"></audio>
+        </div>
+        <div class="spectrogram-item">
+            <p><b>DDIM</b></p>
+            <audio class="fixed-width" controls src="./SteerEdit_demo/Sample4/DDIM.flac"></audio>
+        </div>
+    </div>
+</div>
+
+
+<div class="section">
+    <div class="spectrogram-container">
+        <div class="spectrogram-item">
+            <p><b>Source Music</b></p>
+            <audio class="fixed-width" controls src="./SteerEdit_demo/Sample5/source.flac"></audio>
+        </div>
+        <div class="spectrogram-item">
+            <p><b>Source Prompt</b></p>
+            <!-- <p> <br></p> -->
+            <div class="caption">
+                A recording featuring a wide resonating <b>woodwind</b> melody with audio crackles.
+            </div>
+        </div>
+        <div class="spectrogram-item">
+            <p><b>Target Prompt</b></p>
+            <!-- <p> <br></p> -->
+            <div class="caption">
+                A recording featuring a wide resonating <b>trumpet</b> melody with audio crackles.
+            </div>
+        </div>
+        <div class="spectrogram-item">
+            <p> <br></p>
+        </div>
+        <div class="spectrogram-item">
+            <p> <br></p>
+        </div>
+
+    </div>
+    <div class="spectrogram-container">
+        <div class="spectrogram-item">
+            <p> <b>SteerMusic</b></p>
+            <audio class="fixed-width" controls src="./SteerEdit_demo/Sample5/dds.flac"></audio>
+        </div>
+        <div class="spectrogram-item">
+            <p> <b>MusicMagus</b></p>
+            <audio class="fixed-width" controls src="./SteerEdit_demo/Sample5/musicmagus.flac"></audio>
+        </div>
+        <div class="spectrogram-item">
+            <p><b>ZETA</b></p>
+            <audio class="fixed-width" controls src="./SteerEdit_demo/Sample5/ZETA.flac">></audio>
+        </div>
+        <div class="spectrogram-item">
+            <p><b>SDEdit</b></p>
+            <audio class="fixed-width" controls src="./SteerEdit_demo/Sample5/SDEdit.flac"></audio>
+        </div>
+        <div class="spectrogram-item">
+            <p><b>DDIM</b></p>
+            <audio class="fixed-width" controls src="./SteerEdit_demo/Sample5/DDIM.flac"></audio>
+        </div>
+    </div>
+</div>
+
+<div class="section">
+    <div class="spectrogram-container">
+        <div class="spectrogram-item">
+            <p><b>Source Music</b></p>
+            <audio class="fixed-width" controls src="./SteerEdit_demo/Sample6/source.flac"></audio>
+        </div>
+        <div class="spectrogram-item">
+            <p><b>Source Prompt</b></p>
+            <!-- <p> <br></p> -->
+            <div class="caption">
+                A delicate optimistic acoustic <b>guitar</b> instrumental.
+            </div>
+        </div>
+        <div class="spectrogram-item">
+            <p><b>Target Prompt</b></p>
+            <!-- <p> <br></p> -->
+            <div class="caption">
+                A delicate optimistic acoustic <b>harp</b> instrumental.
+            </div>
+        </div>
+        <div class="spectrogram-item">
+            <p> <br></p>
+        </div>
+        <div class="spectrogram-item">
+            <p> <br></p>
+        </div>
+
+    </div>
+    <div class="spectrogram-container">
+        <div class="spectrogram-item">
+            <p> <b>SteerMusic</b></p>
+            <audio class="fixed-width" controls src="./SteerEdit_demo/Sample6/dds.flac"></audio>
+        </div>
+        <div class="spectrogram-item">
+            <p> <b>MusicMagus</b></p>
+            <audio class="fixed-width" controls src="./SteerEdit_demo/Sample6/musicmagus.flac"></audio>
+        </div>
+        <div class="spectrogram-item">
+            <p><b>ZETA</b></p>
+            <audio class="fixed-width" controls src="./SteerEdit_demo/Sample6/ZETA.flac">></audio>
+        </div>
+        <div class="spectrogram-item">
+            <p><b>SDEdit</b></p>
+            <audio class="fixed-width" controls src="./SteerEdit_demo/Sample6/SDEdit.flac"></audio>
+        </div>
+        <div class="spectrogram-item">
+            <p><b>DDIM</b></p>
+            <audio class="fixed-width" controls src="./SteerEdit_demo/Sample6/DDIM.flac"></audio>
+        </div>
+    </div>
+</div>
+
+<div class="section">
+    <div class="spectrogram-container">
+        <div class="spectrogram-item">
+            <p><b>Source Music</b></p>
+            <audio class="fixed-width" controls src="./SteerEdit_demo/Sample7/source.flac"></audio>
+        </div>
+        <div class="spectrogram-item">
+            <p><b>Source Prompt</b></p>
+            <!-- <p> <br></p> -->
+            <div class="caption">
+                A recording of an uptempo <b>country</b> song with acoustic rhythm guitar passionate male vocal compressed electric guitar melody.
+            </div>
+        </div>
+        <div class="spectrogram-item">
+            <p><b>Target Prompt</b></p>
+            <!-- <p> <br></p> -->
+            <div class="caption">
+                A recording of an uptempo <b>rock</b> song with acoustic rhythm guitar passionate male vocal compressed electric guitar melody.
+            </div>
+        </div>
+        <div class="spectrogram-item">
+            <p> <br></p>
+        </div>
+        <div class="spectrogram-item">
+            <p> <br></p>
+        </div>
+
+    </div>
+    <div class="spectrogram-container">
+        <div class="spectrogram-item">
+            <p> <b>SteerMusic</b></p>
+            <audio class="fixed-width" controls src="./SteerEdit_demo/Sample7/dds.flac"></audio>
+        </div>
+        <div class="spectrogram-item">
+            <p> <b>MusicMagus</b></p>
+            <audio class="fixed-width" controls src="./SteerEdit_demo/Sample7/musicmagus.flac"></audio>
+        </div>
+        <div class="spectrogram-item">
+            <p><b>ZETA</b></p>
+            <audio class="fixed-width" controls src="./SteerEdit_demo/Sample7/ZETA.flac">></audio>
+        </div>
+        <div class="spectrogram-item">
+            <p><b>SDEdit</b></p>
+            <audio class="fixed-width" controls src="./SteerEdit_demo/Sample7/SDEdit.flac"></audio>
+        </div>
+        <div class="spectrogram-item">
+            <p><b>DDIM</b></p>
+            <audio class="fixed-width" controls src="./SteerEdit_demo/Sample7/DDIM.flac"></audio>
+        </div>
+    </div>
+</div>
+
+<div class="section">
+    <div class="spectrogram-container">
+        <div class="spectrogram-item">
+            <p><b>Source Music</b></p>
+            <audio class="fixed-width" controls src="./SteerEdit_demo/Sample8/source.flac"></audio>
+        </div>
+        <div class="spectrogram-item">
+            <p><b>Source Prompt</b></p>
+            <!-- <p> <br></p> -->
+            <div class="caption">
+                Melancholic 2000s <b>rock</b> with electric guitars electric bass and acoustic drums at a slow tempo.
+            </div>
+        </div>
+        <div class="spectrogram-item">
+            <p><b>Target Prompt</b></p>
+            <!-- <p> <br></p> -->
+            <div class="caption">
+                Melancholic 2000s <b>jazz</b> with electric guitars electric bass and acoustic drums at a slow tempo.
+            </div>
+        </div>
+        <div class="spectrogram-item">
+            <p> <br></p>
+        </div>
+        <div class="spectrogram-item">
+            <p> <br></p>
+        </div>
+
+    </div>
+    <div class="spectrogram-container">
+        <div class="spectrogram-item">
+            <p> <b>SteerMusic</b></p>
+            <audio class="fixed-width" controls src="./SteerEdit_demo/Sample8/dds.flac"></audio>
+        </div>
+        <div class="spectrogram-item">
+            <p> <b>MusicMagus</b></p>
+            <audio class="fixed-width" controls src="./SteerEdit_demo/Sample8/musicmagus.flac"></audio>
+        </div>
+        <div class="spectrogram-item">
+            <p><b>ZETA</b></p>
+            <audio class="fixed-width" controls src="./SteerEdit_demo/Sample8/ZETA.flac">></audio>
+        </div>
+        <div class="spectrogram-item">
+            <p><b>SDEdit</b></p>
+            <audio class="fixed-width" controls src="./SteerEdit_demo/Sample8/SDEdit.flac"></audio>
+        </div>
+        <div class="spectrogram-item">
+            <p><b>DDIM</b></p>
+            <audio class="fixed-width" controls src="./SteerEdit_demo/Sample8/DDIM.flac"></audio>
+        </div>
+    </div>
+</div>
+
+
+<div class="section">
+    <div class="spectrogram-container">
+        <div class="spectrogram-item">
+            <p><b>Source Music</b></p>
+            <audio class="fixed-width" controls src="./SteerEdit_demo/Sample10/source.flac"></audio>
+        </div>
+        <div class="spectrogram-item">
+            <p><b>Source Prompt</b></p>
+            <!-- <p> <br></p> -->
+            <div class="caption">
+                A recording of retro <b>pop</b> with string and piano accompaniment.
+            </div>
+        </div>
+        <div class="spectrogram-item">
+            <p><b>Target Prompt</b></p>
+            <!-- <p> <br></p> -->
+            <div class="caption">
+                A recording of retro <b>jazz</b> with string and piano accompaniment.
+            </div>
+        </div>
+        <div class="spectrogram-item">
+            <p> <br></p>
+        </div>
+        <div class="spectrogram-item">
+            <p> <br></p>
+        </div>
+
+    </div>
+    <div class="spectrogram-container">
+        <div class="spectrogram-item">
+            <p> <b>SteerMusic</b></p>
+            <audio class="fixed-width" controls src="./SteerEdit_demo/Sample10/dds.flac"></audio>
+        </div>
+        <div class="spectrogram-item">
+            <p> <b>MusicMagus</b></p>
+            <audio class="fixed-width" controls src="./SteerEdit_demo/Sample10/musicmagus.flac"></audio>
+        </div>
+        <div class="spectrogram-item">
+            <p><b>ZETA</b></p>
+            <audio class="fixed-width" controls src="./SteerEdit_demo/Sample10/ZETA.flac">></audio>
+        </div>
+        <div class="spectrogram-item">
+            <p><b>SDEdit</b></p>
+            <audio class="fixed-width" controls src="./SteerEdit_demo/Sample10/SDEdit.flac"></audio>
+        </div>
+        <div class="spectrogram-item">
+            <p><b>DDIM</b></p>
+            <audio class="fixed-width" controls src="./SteerEdit_demo/Sample10/DDIM.flac"></audio>
+        </div>
+    </div>
+</div>
+
+
+<div class="section">
+    <div class="spectrogram-container">
+        <div class="spectrogram-item">
+            <p><b>Source Music</b></p>
+            <audio class="fixed-width" controls src="./SteerEdit_demo/Sample11/source.flac"></audio>
+        </div>
+        <div class="spectrogram-item">
+            <p><b>Source Prompt</b></p>
+            <!-- <p> <br></p> -->
+            <div class="caption">
+                A modern <b>rock</b> recording featuring smooth male vocals steady ride cymbal pattern snare with brushes and fingerstyle acoustic guitar.
+            </div>
+        </div>
+        <div class="spectrogram-item">
+            <p><b>Target Prompt</b></p>
+            <!-- <p> <br></p> -->
+            <div class="caption">
+                A modern <b>jazz</b> recording featuring smooth male vocals steady ride cymbal pattern snare with brushes and fingerstyle acoustic guitar.
+            </div>
+        </div>
+        <div class="spectrogram-item">
+            <p> <br></p>
+        </div>
+        <div class="spectrogram-item">
+            <p> <br></p>
+        </div>
+
+    </div>
+    <div class="spectrogram-container">
+        <div class="spectrogram-item">
+            <p> <b>SteerMusic</b></p>
+            <audio class="fixed-width" controls src="./SteerEdit_demo/Sample11/dds.flac"></audio>
+        </div>
+        <div class="spectrogram-item">
+            <p> <b>MusicMagus</b></p>
+            <audio class="fixed-width" controls src="./SteerEdit_demo/Sample11/musicmagus.flac"></audio>
+        </div>
+        <div class="spectrogram-item">
+            <p><b>ZETA</b></p>
+            <audio class="fixed-width" controls src="./SteerEdit_demo/Sample11/ZETA.flac">></audio>
+        </div>
+        <div class="spectrogram-item">
+            <p><b>SDEdit</b></p>
+            <audio class="fixed-width" controls src="./SteerEdit_demo/Sample11/SDEdit.flac"></audio>
+        </div>
+        <div class="spectrogram-item">
+            <p><b>DDIM</b></p>
+            <audio class="fixed-width" controls src="./SteerEdit_demo/Sample11/DDIM.flac"></audio>
+        </div>
+    </div>
+</div>
+
+
+<div class="section">
+    <div class="spectrogram-container">
+        <div class="spectrogram-item">
+            <p><b>Source Music</b></p>
+            <audio class="fixed-width" controls src="./SteerEdit_demo/Sample13/source.flac"></audio>
+        </div>
+        <div class="spectrogram-item">
+            <p><b>Source Prompt</b></p>
+            <!-- <p> <br></p> -->
+            <div class="caption">
+                A jewish gospel song with male vocal acoustic instruments and <b>emotional</b> devotional theme.
+            </div>
+        </div>
+        <div class="spectrogram-item">
+            <p><b>Target Prompt</b></p>
+            <!-- <p> <br></p> -->
+            <div class="caption">
+                A jewish gospel song with male vocal acoustic instruments and <b>joyful</b> devotional theme.
+            </div>
+        </div>
+        <div class="spectrogram-item">
+            <p> <br></p>
+        </div>
+        <div class="spectrogram-item">
+            <p> <br></p>
+        </div>
+
+    </div>
+    <div class="spectrogram-container">
+        <div class="spectrogram-item">
+            <p> <b>SteerMusic</b></p>
+            <audio class="fixed-width" controls src="./SteerEdit_demo/Sample13/dds.flac"></audio>
+        </div>
+        <div class="spectrogram-item">
+            <p> <b>MusicMagus</b></p>
+            <audio class="fixed-width" controls src="./SteerEdit_demo/Sample13/musicmagus.flac"></audio>
+        </div>
+        <div class="spectrogram-item">
+            <p><b>ZETA</b></p>
+            <audio class="fixed-width" controls src="./SteerEdit_demo/Sample13/ZETA.flac">></audio>
+        </div>
+        <div class="spectrogram-item">
+            <p><b>SDEdit</b></p>
+            <audio class="fixed-width" controls src="./SteerEdit_demo/Sample13/SDEdit.flac"></audio>
+        </div>
+        <div class="spectrogram-item">
+            <p><b>DDIM</b></p>
+            <audio class="fixed-width" controls src="./SteerEdit_demo/Sample13/DDIM.flac"></audio>
+        </div>
+    </div>
+</div>
+
+ 
+<div class="section">
+    <div class="spectrogram-container">
+        <div class="spectrogram-item">
+            <p><b>Source Music</b></p>
+            <audio class="fixed-width" controls src="./SteerEdit_demo/Sample14/source.flac"></audio>
+        </div>
+        <div class="spectrogram-item">
+            <p><b>Source Prompt</b></p>
+            <!-- <p> <br></p> -->
+            <div class="caption">
+                A <b>lively</b> cheerful instrumental piece featuring classical strings and horn.
+            </div>
+        </div>
+        <div class="spectrogram-item">
+            <p><b>Target Prompt</b></p>
+            <!-- <p> <br></p> -->
+            <div class="caption">
+                A <b>melancholy</b> cheerful instrumental piece featuring classical strings and horn.
+            </div>
+        </div>
+        <div class="spectrogram-item">
+            <p> <br></p>
+        </div>
+        <div class="spectrogram-item">
+            <p> <br></p>
+        </div>
+
+    </div>
+    <div class="spectrogram-container">
+        <div class="spectrogram-item">
+            <p> <b>SteerMusic</b></p>
+            <audio class="fixed-width" controls src="./SteerEdit_demo/Sample14/dds.flac"></audio>
+        </div>
+        <div class="spectrogram-item">
+            <p> <b>MusicMagus</b></p>
+            <audio class="fixed-width" controls src="./SteerEdit_demo/Sample14/musicmagus.flac"></audio>
+        </div>
+        <div class="spectrogram-item">
+            <p><b>ZETA</b></p>
+            <audio class="fixed-width" controls src="./SteerEdit_demo/Sample14/ZETA.flac">></audio>
+        </div>
+        <div class="spectrogram-item">
+            <p><b>SDEdit</b></p>
+            <audio class="fixed-width" controls src="./SteerEdit_demo/Sample14/SDEdit.flac"></audio>
+        </div>
+        <div class="spectrogram-item">
+            <p><b>DDIM</b></p>
+            <audio class="fixed-width" controls src="./SteerEdit_demo/Sample14/DDIM.flac"></audio>
+        </div>
+    </div>
+</div>
+
+<div class="section">
+    <div class="spectrogram-container">
+        <div class="spectrogram-item">
+            <p><b>Source Music</b></p>
+            <audio class="fixed-width" controls src="./SteerEdit_demo/Sample16/source.flac"></audio>
+        </div>
+        <div class="spectrogram-item">
+            <p><b>Source Prompt</b></p>
+            <!-- <p> <br></p> -->
+            <div class="caption">
+                An <b>emotional</b> foreign language pop song with steady drumming keyboard acoustic guitar and violin harmonies.
+            </div>
+        </div>
+        <div class="spectrogram-item">
+            <p><b>Target Prompt</b></p>
+            <!-- <p> <br></p> -->
+            <div class="caption">
+                An <b>exuberant</b> foreign language pop song with steady drumming keyboard acoustic guitar and violin harmonies.
+            </div>
+        </div>
+        <div class="spectrogram-item">
+            <p> <br></p>
+        </div>
+        <div class="spectrogram-item">
+            <p> <br></p>
+        </div>
+
+    </div>
+    <div class="spectrogram-container">
+        <div class="spectrogram-item">
+            <p> <b>SteerMusic</b></p>
+            <audio class="fixed-width" controls src="./SteerEdit_demo/Sample16/dds.flac"></audio>
+        </div>
+        <div class="spectrogram-item">
+            <p> <b>MusicMagus</b></p>
+            <audio class="fixed-width" controls src="./SteerEdit_demo/Sample16/musicmagus.flac"></audio>
+        </div>
+        <div class="spectrogram-item">
+            <p><b>ZETA</b></p>
+            <audio class="fixed-width" controls src="./SteerEdit_demo/Sample16/ZETA.flac">></audio>
+        </div>
+        <div class="spectrogram-item">
+            <p><b>SDEdit</b></p>
+            <audio class="fixed-width" controls src="./SteerEdit_demo/Sample16/SDEdit.flac"></audio>
+        </div>
+        <div class="spectrogram-item">
+            <p><b>DDIM</b></p>
+            <audio class="fixed-width" controls src="./SteerEdit_demo/Sample16/DDIM.flac"></audio>
+        </div>
+    </div>
+</div>
+
+<h3><b>1.2</b> Samples sourced from MusicDelta</h3>
+<div id="part1.2" class="abstract">
+<p>The source music used in the following demonstrations is taken from MusicDelta. In this part, we display edited samples from SteerMusic with different target prompts.</p>
+</div>
+<table>
+    <thead>
+      <tr>
+        <th>Source Music</th>
+        <th>Sample 1</th>
+        <th>Sample 2</th>
+        <th>Sample 3</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+              <audio class="fixed-width2" controls src="./SteerEdit_demo/sample_musicdelta/MusicDelta_Beethoven_MIX.flac"></audio>
+              <div class="caption">"A high quality recording of wind instruments and strings playing."</div>
+            </td>
+            <td>
+              <audio class="fixed-width2" controls src="./SteerEdit_demo/sample_musicdelta/MusicDelta_Beethoven_MIX+69.flac"></audio>
+              <div class="caption">"A high quality recording of wind instruments and a piano playing."</div>
+            </td>
+            <td>
+              <audio class="fixed-width2" controls src="./SteerEdit_demo/sample_musicdelta/MusicDelta_Beethoven_MIX+70.flac"></audio>
+              <div class="caption">"A high quality recording of drums and strings playing."</div>
+            </td>
+            <td>
+              <audio class="fixed-width2" controls src="./SteerEdit_demo/sample_musicdelta/MusicDelta_Beethoven_MIX+71.flac"></audio>
+              <div class="caption">"A high quality recording of trumpets and cellos playing."</div>
+            </td>
+          </tr>
+
+          <tr>
+            <td>
+              <audio class="fixed-width2" controls src="./SteerEdit_demo/sample_musicdelta/MusicDelta_CoolJazz_MIX.flac"></audio>
+              <div class="caption">"A high quality recording of a trumpet, a saxophone, a piano, a bass guitar and drums playing."</div>
+            </td>
+            <td>
+              <audio class="fixed-width2" controls src="./SteerEdit_demo/sample_musicdelta/MusicDelta_CoolJazz_MIX+221.flac"></audio>
+              <div class="caption">"A high quality recording of a violin, a saxophone, a piano, a bass guitar and drums playing."</div>
+            </td>
+            <td>
+              <audio class="fixed-width2" controls src="./SteerEdit_demo/sample_musicdelta/MusicDelta_CoolJazz_MIX+222.flac"></audio>
+              <div class="caption">"A high quality recording of a trumpet, a violin, a piano, a bass guitar and drums playing."</div>
+            </td>
+            <td>
+              <audio class="fixed-width2" controls src="./SteerEdit_demo/sample_musicdelta/MusicDelta_CoolJazz_MIX+223.flac"></audio>
+              <div class="caption">"A high quality recording of a violin, a piano, a bass guitar and drums playing."</div>
+            </td>
+          </tr>
+
+          <tr>
+            <td>
+              <audio class="fixed-width2" controls src="./SteerEdit_demo/sample_musicdelta/MusicDelta_InTheHalloftheMountainKing_MIX.flac"></audio>
+              <div class="caption">"A high quality recording of strings, flutes and drums playing."</div>
+            </td>
+            <td>
+              <audio class="fixed-width2" controls src="./SteerEdit_demo/sample_musicdelta/MusicDelta_InTheHalloftheMountainKing_MIX+441.flac"></audio>
+              <div class="caption">"A high quality recording of strings and drums playing."</div>
+            </td>
+            <td>
+              <audio class="fixed-width2" controls src="./SteerEdit_demo/sample_musicdelta/MusicDelta_InTheHalloftheMountainKing_MIX+442.flac"></audio>
+              <div class="caption">"A high quality recording of a piano, flutes and drums playing."</div>
+            </td>
+            <td>
+              <audio class="fixed-width2" controls src="./SteerEdit_demo/sample_musicdelta/MusicDelta_InTheHalloftheMountainKing_MIX+443.flac"></audio>
+              <div class="caption">"A high quality recording of strings, a piano and drums playing."</div>
+            </td>
+          </tr>
+    </tbody>
+</table>
+ 
+  <hr>
+
+  <h2> <b>Part 2</b>. SteerMusic+: Personalized Music Editing</h2>
+  <div id="part2" class="abstract">
+  <p style="text-align: justify;">
+  This part contains demonstration of our SteerMusic+ method on personalized music editing task, which the inputs are sourced from MusicCaps and MusicDelta dataset.
+  </p>
+  </div>
+
+<h3><b>2.1</b> Samples sourced from MusicCaps</h3>
+<div id="part2.1" class="abstract">
+<p>The source music used in the following demonstrations is taken from MusicCaps.</p>
+</div>
+
+<table>
+    <thead>
+      <tr>
+        <th>Source Music</th>
+        <th>Target Concept</th>
+        <th>SteerMusic+</th>
+        <th>DreamSound</th>
+        <th>Textual Inversion</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+              <audio class="fixed-width2" controls src="./SteerMusic_Demo/Sample4/source.flac"></audio>
+              <div class="caption">"A relaxing <b>reggae</b> track with acoustic drums bass keys guitar and female vocals."</div>
+            </td>
+            <td>
+              <audio class="fixed-width3" controls src="./SteerMusic_Demo/Sample4/reggae_1.flac"></audio>
+              <div class="caption">[<b>Reggae</b>]</div>
+            </td>
+            <td>
+              <audio class="fixed-width2" controls src="./SteerMusic_Demo/Sample4/C5MhO2HM2Wg_SteerMusic.flac"></audio>
+              <div class="caption">"A relaxing [<b>reggae</b>] track with acoustic drums bass keys guitar and female vocals."</div>
+            </td>
+            <td>
+              <audio class="fixed-width2" controls src="./SteerMusic_Demo/Sample4/C5MhO2HM2Wg_DreamSound.flac"></audio>
+              <div class="caption">"A relaxing [<b>reggae</b>] track with acoustic drums bass keys guitar and female vocals."</div>
+            </td>
+            <td>
+                <audio class="fixed-width2" controls src="./SteerMusic_Demo/Sample4/C5MhO2HM2Wg_textinv.flac"></audio>
+                <div class="caption">"A relaxing [<b>reggae</b>] track with acoustic drums bass keys guitar and female vocals."</div>
+              </td>
+          </tr> 
+      <!-- Repeat this <tr> block for each row -->
+      <tr>
+        <td>
+          <audio class="fixed-width2" controls src="./SteerMusic_Demo/Sample1/source.flac"></audio>
+          <div class="caption">"A recording of fingerstyle acoustic <b>guitar</b> with a classical atmosphere."</div>
+        </td>
+        <td>
+          <audio class="fixed-width3" controls src="./SteerMusic_Demo/Sample1/sitar_1.flac"></audio>
+          <div class="caption">[<b>Sitar</b>]</div>
+        </td>
+        <td>
+          <audio class="fixed-width2" controls src="./SteerMusic_Demo/Sample1/07FxCXxknY4_SteerMusic.flac"></audio>
+          <div class="caption">"A recording of fingerstyle acoustic [<b>sitar</b>] with a classical atmosphere."</div>
+        </td>
+        <td>
+          <audio class="fixed-width2" controls src="./SteerMusic_Demo/Sample1/07FxCXxknY4_DreamSound.flac"></audio>
+          <div class="caption">"A recording of fingerstyle acoustic [<b>sitar</b>] with a classical atmosphere."</div>
+        </td>
+        <td>
+            <audio class="fixed-width2" controls src="./SteerMusic_Demo/Sample1/07FxCXxknY4_textinv.flac"></audio>
+            <div class="caption">"A recording of fingerstyle acoustic [<b>sitar</b>] with a classical atmosphere."</div>
+          </td>
+      </tr>
+
+      <tr>
+        <td>
+          <audio class="fixed-width2" controls src="./SteerMusic_Demo/Sample2/source.flac"></audio>
+          <div class="caption">"A <b>guitar</b>  tutorial with energetic technique and ambient noises."</div>
+        </td>
+        <td>
+          <audio class="fixed-width3" controls src="./SteerMusic_Demo/Sample2/bouzouki_1.flac"></audio>
+          <div class="caption">[<b>Bouzouki</b>]</div>
+        </td>
+        <td>
+          <audio class="fixed-width2" controls src="./SteerMusic_Demo/Sample2/-5xOcMJpTUk_SteerMusic.flac"></audio>
+          <div class="caption">"A [<b>bouzouki</b>]  tutorial with energetic technique and ambient noises."</div>
+        </td>
+        <td>
+          <audio class="fixed-width2" controls src="./SteerMusic_Demo/Sample2/-5xOcMJpTUk_DreamSound.flac"></audio>
+          <div class="caption">"A [<b>bouzouki</b>]  tutorial with energetic technique and ambient noises."</div>
+        </td>
+        <td>
+            <audio class="fixed-width2" controls src="./SteerMusic_Demo/Sample2/-5xOcMJpTUk_textinv.flac"></audio>
+            <div class="caption">"A [<b>bouzouki</b>]  tutorial with energetic technique and ambient noises."</div>
+          </td>
+      </tr>
+
+      <tr>
+        <td>
+          <audio class="fixed-width2" controls src="./SteerMusic_Demo/Sample3/source.flac"></audio>
+          <div class="caption">"A recording of an intense rhythmic <b>drum</b> battle"</div>
+        </td>
+        <td>
+          <audio class="fixed-width3" controls src="./SteerMusic_Demo/Sample3/bouzouki_1.flac"></audio>
+          <div class="caption">[<b>Bouzouki</b>]</div>
+        </td>
+        <td>
+          <audio class="fixed-width2" controls src="./SteerMusic_Demo/Sample3/xmaVWayBvaY_SteerMusic.flac"></audio>
+          <div class="caption">"A recording of an intense rhythmic [<b>bouzouki</b>] battle"</div>
+        </td>
+        <td>
+          <audio class="fixed-width2" controls src="./SteerMusic_Demo/Sample3/xmaVWayBvaY_DreamSound.flac"></audio>
+          <div class="caption">"A recording of an intense rhythmic [<b>bouzouki</b>] battle"</div>
+        </td>
+        <td>
+            <audio class="fixed-width2" controls src="./SteerMusic_Demo/Sample3/xmaVWayBvaY_textinv.flac"></audio>
+            <div class="caption">"A recording of an intense rhythmic [<b>bouzouki</b>] battle"</div>
+          </td>
+      </tr>
+
+
+
+
+      <tr>
+        <td>
+          <audio class="fixed-width2" controls src="./SteerMusic_Demo/Sample5/source.flac"></audio>
+          <div class="caption">"A lively country tune featuring banjo acoustic <b>piano</b> violin and upright bass."</div>
+        </td>
+        <td>
+          <audio class="fixed-width3" controls src="./SteerMusic_Demo/Sample5/sitar_1.flac"></audio>
+          <div class="caption">[<b>Sitar</b>]</div>
+        </td>
+        <td>
+          <audio class="fixed-width2" controls src="./SteerMusic_Demo/Sample5/-uaTK8sa5Ms_SteerMusic.flac"></audio>
+          <div class="caption">"A lively country tune featuring banjo acoustic [<b>sitar</b>] violin and upright bass."</div>
+        </td>
+        <td>
+          <audio class="fixed-width2" controls src="./SteerMusic_Demo/Sample5/-uaTK8sa5Ms_DreamSound.flac"></audio>
+          <div class="caption">"A lively country tune featuring banjo acoustic [<b>sitar</b>] violin and upright bass."</div>
+        </td>
+        <td>
+            <audio class="fixed-width2" controls src="./SteerMusic_Demo/Sample5/-uaTK8sa5Ms_textinv.flac"></audio>
+            <div class="caption">"A lively country tune featuring banjo acoustic [<b>sitar</b>] violin and upright bass."</div>
+          </td>
+      </tr>
+
+
+      <tr>
+        <td>
+          <audio class="fixed-width2" controls src="./SteerMusic_Demo/Sample6/source.flac"></audio>
+          <div class="caption">"A recording of renaissance music with soft wooden percussions and a mellow harmonized <b>flute</b> melody."</div>
+        </td>
+        <td>
+          <audio class="fixed-width3" controls src="./SteerMusic_Demo/Sample6/ocarina_1.flac"></audio>
+          <div class="caption">[<b>Ocarina</b>]</div>
+        </td>
+        <td>
+          <audio class="fixed-width2" controls src="./SteerMusic_Demo/Sample6/-7wUQP6G5EQ_SteerMusic.flac"></audio>
+          <div class="caption">"A recording of renaissance music with soft wooden percussions and a mellow harmonized [<b>ocarina</b>] melody."</div>
+        </td>
+        <td>
+          <audio class="fixed-width2" controls src="./SteerMusic_Demo/Sample6/-7wUQP6G5EQ_DreamSound.flac"></audio>
+          <div class="caption">"A recording of renaissance music with soft wooden percussions and a mellow harmonized [<b>ocarina</b>] melody."</div>
+        </td>
+        <td>
+            <audio class="fixed-width2" controls src="./SteerMusic_Demo/Sample6/-7wUQP6G5EQ_textinv.flac"></audio>
+            <div class="caption">"A recording of renaissance music with soft wooden percussions and a mellow harmonized [<b>ocarina</b>] melody."</div>
+          </td>
+      </tr>
+
+
+      <tr>
+        <td>
+          <audio class="fixed-width2" controls src="./SteerMusic_Demo/Sample7/source.flac"></audio>
+          <div class="caption">"A melancholic pop song with acoustic <b>piano</b> strings electronic bass and female vocals."</div>
+        </td>
+        <td>
+          <audio class="fixed-width3" controls src="./SteerMusic_Demo/Sample7/ocarina_1.flac"></audio>
+          <div class="caption">[<b>Ocarina</b>]</div>
+        </td>
+        <td>
+          <audio class="fixed-width2" controls src="./SteerMusic_Demo/Sample7/16F5fdORzSo_SteerMusic.flac"></audio>
+          <div class="caption">"A melancholic pop song with acoustic [<b>ocarina</b>] strings electronic bass and female vocals."</div>
+        </td>
+        <td>
+          <audio class="fixed-width2" controls src="./SteerMusic_Demo/Sample7/16F5fdORzSo_DreamSound.flac"></audio>
+          <div class="caption">"A melancholic pop song with acoustic [<b>ocarina</b>] strings electronic bass and female vocals."</div>
+        </td>
+        <td>
+            <audio class="fixed-width2" controls src="./SteerMusic_Demo/Sample7/16F5fdORzSo_textinv.flac"></audio>
+            <div class="caption">"A melancholic pop song with acoustic [<b>ocarina</b>] strings electronic bass and female vocals."</div>
+          </td>
+      </tr>
+
+
+
+      <tr>
+        <td>
+          <audio class="fixed-width2" controls src="./SteerMusic_Demo/Sample8/source.flac"></audio>
+          <div class="caption">"A tranquil complex <b>jazz</b> live performance featuring instrumental improvisation on organ saxophone bass guitar and acoustic drums."</div>
+        </td>
+        <td>
+          <audio class="fixed-width3" controls src="./SteerMusic_Demo/Sample8/morricone_0.flac"></audio>
+          <div class="caption">[<b>Morricone</b>]</div>
+        </td>
+        <td>
+          <audio class="fixed-width2" controls src="./SteerMusic_Demo/Sample8/CYuYfvQv4eo_SteerMusic.flac"></audio>
+          <div class="caption">"A tranquil complex [<b>morricone</b>] live performance featuring instrumental improvisation on organ saxophone bass guitar and acoustic drums."</div>
+        </td>
+        <td>
+          <audio class="fixed-width2" controls src="./SteerMusic_Demo/Sample8/CYuYfvQv4eo_DreamSound.flac"></audio>
+          <div class="caption">"A tranquil complex [<b>morricone</b>] live performance featuring instrumental improvisation on organ saxophone bass guitar and acoustic drums."</div>
+        </td>
+        <td>
+            <audio class="fixed-width2" controls src="./SteerMusic_Demo/Sample8/CYuYfvQv4eo_textinv.flac"></audio>
+            <div class="caption">"A tranquil complex [<b>morricone</b>] live performance featuring instrumental improvisation on organ saxophone bass guitar and acoustic drums."</div>
+          </td>
+      </tr>
+
+
+
+      <tr>
+        <td>
+          <audio class="fixed-width2" controls src="./SteerMusic_Demo/Sample9/source.flac"></audio>
+          <div class="caption">"A recording featuring an amateur DJ performance with turntable scratching and <b>electronic</b> drums."</div>
+        </td>
+        <td>
+          <audio class="fixed-width3" controls src="./SteerMusic_Demo/Sample9/reggae_1.flac"></audio>
+          <div class="caption">[<b>Reggae</b>]</div>
+        </td>
+        <td>
+          <audio class="fixed-width2" controls src="./SteerMusic_Demo/Sample9/DQzg3cZeYSw_SteerMusic.flac"></audio>
+          <div class="caption">"A recording featuring an amateur DJ performance with turntable scratching and [<b>reggae</b>] drums."</div>
+        </td>
+        <td>
+          <audio class="fixed-width2" controls src="./SteerMusic_Demo/Sample9/DQzg3cZeYSw_DreamSound.flac"></audio>
+          <div class="caption">"A recording featuring an amateur DJ performance with turntable scratching and [<b>reggae</b>] drums."</div>
+        </td>
+        <td>
+            <audio class="fixed-width2" controls src="./SteerMusic_Demo/Sample9/DQzg3cZeYSw_textinv.flac"></audio>
+            <div class="caption">"A recording featuring an amateur DJ performance with turntable scratching and [<b>reggae</b>] drums."</div>
+          </td>
+      </tr>
+
+      
+
+
+      <tr>
+        <td>
+          <audio class="fixed-width2" controls src="./SteerMusic_Demo/Sample10/source.flac"></audio>
+          <div class="caption">"A recording of eclectic rebellious <b>rock</b> music featuring an electric guitar solo keyboard bass guitar and acoustic drums."</div>
+        </td>
+        <td>
+          <audio class="fixed-width3" controls src="./SteerMusic_Demo/Sample10/hiphop_0.flac"></audio>
+          <div class="caption">[<b>Hiphop</b>]</div>
+        </td>
+        <td>
+          <audio class="fixed-width2" controls src="./SteerMusic_Demo/Sample10/C1M5xqDQW58_SteerMusic.flac"></audio>
+          <div class="caption">"A recording of eclectic rebellious [<b>hiphop</b>] music featuring an electric guitar solo keyboard bass guitar and acoustic drums."</div>
+        <td>
+          <audio class="fixed-width2" controls src="./SteerMusic_Demo/Sample10/C1M5xqDQW58_DreamSound.flac"></audio>
+          <div class="caption">"A recording of eclectic rebellious [<b>hiphop</b>] music featuring an electric guitar solo keyboard bass guitar and acoustic drums."</div>
+        </td>
+        <td>
+            <audio class="fixed-width2" controls src="./SteerMusic_Demo/Sample10/C1M5xqDQW58_textinv.flac"></audio>
+            <div class="caption">"A recording of eclectic rebellious [<b>hiphop</b>] music featuring an electric guitar solo keyboard bass guitar and acoustic drums."</div>
+          </td>
+      </tr>
+
+      
+
+
+      <tr>
+        <td>
+          <audio class="fixed-width2" controls src="./SteerMusic_Demo/Sample11/source.flac"></audio>
+          <div class="caption">"A recording of <b>rock</b> and roll with electric guitar bass guitar acoustic drums and male vocals."</div>
+        </td>
+        <td>
+          <audio class="fixed-width3" controls src="./SteerMusic_Demo/Sample11/hiphop_0.flac"></audio>
+          <div class="caption">[<b>Hiphop</b>]</div>
+        </td>
+        <td>
+          <audio class="fixed-width2" controls src="./SteerMusic_Demo/Sample11/GQbUpJFArKI_SteerMusic.flac"></audio>
+          <div class="caption">"A recording of [<b>hiphop</b>] and roll with electric guitar bass guitar acoustic drums and male vocals."</div>
+        <td>
+          <audio class="fixed-width2" controls src="./SteerMusic_Demo/Sample11/GQbUpJFArKI_DreamSound.flac"></audio>
+          <div class="caption">"A recording of [<b>hiphop</b>] and roll with electric guitar bass guitar acoustic drums and male vocals."</div>
+        </td>
+        <td>
+            <audio class="fixed-width2" controls src="./SteerMusic_Demo/Sample11/GQbUpJFArKI_textinv.flac"></audio>
+            <div class="caption">"A recording of [<b>hiphop</b>] and roll with electric guitar bass guitar acoustic drums and male vocals."</div>
+          </td>
+      </tr>
+
+
+      <tr>
+        <td>
+          <audio class="fixed-width2" controls src="./SteerMusic_Demo/Sample12/source.flac"></audio>
+          <div class="caption">"A mellow <b>rock</b> piece featuring two guitars and a sultry female singer."</div>
+        </td>
+        <td>
+          <audio class="fixed-width3" controls src="./SteerMusic_Demo/Sample12/sarabande_1.flac"></audio>
+          <div class="caption">[<b>Sarabande</b>]</div>
+        </td>
+        <td>
+          <audio class="fixed-width2" controls src="./SteerMusic_Demo/Sample12/Ee6MP1bIRUA_SteerMusic.flac"></audio>
+          <div class="caption">"A mellow [<b>sarabande</b>] piece featuring two guitars and a sultry female singer."</div>
+        <td>
+          <audio class="fixed-width2" controls src="./SteerMusic_Demo/Sample12/Ee6MP1bIRUA_DreamSound.flac"></audio>
+          <div class="caption">"A mellow [<b>sarabande</b>] piece featuring two guitars and a sultry female singer."</div>
+        </td>
+        <td>
+            <audio class="fixed-width2" controls src="./SteerMusic_Demo/Sample12/Ee6MP1bIRUA_textinv.flac"></audio>
+            <div class="caption">"A mellow [<b>sarabande</b>] piece featuring two guitars and a sultry female singer."</div>
+          </td>
+      </tr>
+    </tbody>
+  </table>
+
+<h3><b>2.2</b> Samples sourced from MusicDelta</h3>
+<div id="part2.2" class="abstract">
+ <p>The source music used in the following demonstrations is taken from MusicDelta.</p>
+</div>
+<table>
+    <thead>
+      <tr>
+        <th>Source Music</th>
+        <th>Target Concept</th>
+        <th>SteerMusic+</th>
+        <th>DreamSound</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+              <audio class="fixed-width2" controls src="./SteerMusic_Demo/Sample13/MusicDelta_Vivaldi_MIX.flac"></audio>
+              <div class="caption">"A recording of a vivaldi song."</div>
+            </td>
+            <td>
+              <audio class="fixed-width3" controls src="./SteerMusic_Demo/Sample13/ocarina_1.flac"></audio>
+              <div class="caption">[<b>Ocarina</b>]</div>
+            </td>
+            <td>
+              <audio class="fixed-width2" controls src="./SteerMusic_Demo/Sample13/MusicDelta_Vivaldi_MIX_SM.flac"></audio>
+              <div class="caption">A recording of a [<b>ocarina</b>] song."</div>
+            </td>
+            <td>
+              <audio class="fixed-width2" controls src="./SteerMusic_Demo/Sample13/MusicDelta_Vivaldi_MIX_DS.flac"></audio>
+              <div class="caption">"A recording of a [<b>ocarina</b>] song."</div>
+            </td>
+        </tr>
+
+                <tr>
+            <td>
+              <audio class="fixed-width2" controls src="./SteerMusic_Demo/Sample14/MusicDelta_ChineseDrama_MIX.flac"></audio>
+              <div class="caption">"A recording of a Chinese drama song."</div>
+            </td>
+            <td>
+              <audio class="fixed-width3" controls src="./SteerMusic_Demo/Sample14/bouzouki_2.flac"></audio>
+              <div class="caption">[<b>Bouzouki</b>]</div>
+            </td>
+            <td>
+              <audio class="fixed-width2" controls src="./SteerMusic_Demo/Sample14/MusicDelta_ChineseDrama_MIX_SM.flac"></audio>
+              <div class="caption">"A recording of a [<b>bouzouki</b>] song."</div>
+            </td>
+            <td>
+              <audio class="fixed-width2" controls src="./SteerMusic_Demo/Sample14/MusicDelta_ChineseDrama_MIX_DS.flac"></audio>
+              <div class="caption">"A recording of a [<b>bouzouki</b>] song."</div>
+            </td>
+        </tr>
+
+        
+        <tr>
+            <td>
+              <audio class="fixed-width2" controls src="./SteerMusic_Demo/Sample16/MusicDelta_Beethoven_MIX.flac"></audio>
+              <div class="caption">"A recording of a beethoven song."</div>
+            </td>
+            <td>
+              <audio class="fixed-width3" controls src="./SteerMusic_Demo/Sample16/reggae_2.flac"></audio>
+              <div class="caption">[<b>Reggae</b>]</div>
+            </td>
+            <td>
+              <audio class="fixed-width2" controls src="./SteerMusic_Demo/Sample16/MusicDelta_Beethoven_MIX_SM.flac"></audio>
+              <div class="caption">"A recording of a [<b>reggae</b>] song."</div>
+            </td>
+            <td>
+              <audio class="fixed-width2" controls src="./SteerMusic_Demo/Sample16/MusicDelta_Beethoven_MIX_DS.flac"></audio>
+              <div class="caption">"A recording of a [<b>reggae</b>] song."</div>
+            </td>
+        </tr>
+
+
+        <tr>
+            <td>
+              <audio class="fixed-width2" controls src="./SteerMusic_Demo/Sample15/MusicDelta_Beatles_MIX.flac"></audio>
+              <div class="caption">"A recording of a beatles song."</div>
+            </td>
+            <td>
+              <audio class="fixed-width3" controls src="./SteerMusic_Demo/Sample15/sarabande_2.flac"></audio>
+              <div class="caption">[<b>Sarabande</b>]</div>
+            </td>
+            <td>
+              <audio class="fixed-width2" controls src="./SteerMusic_Demo/Sample15/MusicDelta_Beatles_MIX_SM.flac"></audio>
+              <div class="caption">"A recording of a [<b>sarabande</b>] song."</div>
+            </td>
+            <td>
+              <audio class="fixed-width2" controls src="./SteerMusic_Demo/Sample15/MusicDelta_Beatles_MIX_DS.flac"></audio>
+              <div class="caption">"A recording of a [<b>sarabande</b>] song."</div>
+            </td>
+        </tr>
+
+        <tr>
+            <td>
+              <audio class="fixed-width2" controls src="./SteerMusic_Demo/Sample17/MusicDelta_Vivaldi_MIX.flac"></audio>
+              <div class="caption">"A recording of a vivaldi song."</div>
+            </td>
+            <td>
+              <audio class="fixed-width3" controls src="./SteerMusic_Demo/Sample17/sitar_2.flac"></audio>
+              <div class="caption">[<b>Sitar</b>]</div>
+            </td>
+            <td>
+              <audio class="fixed-width2" controls src="./SteerMusic_Demo/Sample17/MusicDelta_Vivaldi_MIX_SM.flac"></audio>
+              <div class="caption">"A recording of a [<b>sitar</b>] song."</div>
+            </td>
+            <td>
+              <audio class="fixed-width2" controls src="./SteerMusic_Demo/Sample17/MusicDelta_Vivaldi_MIX_DS.flac"></audio>
+              <div class="caption">"A recording of a [<b>sitar</b>] song."</div>
+            </td>
+        </tr>
+</tbody>
+</table>
+<hr>
+<h2> Reference </h2>
+<div id="part3" class="reference">
+<ol>
+    <li id="ref1">
+       <b>[MusicMagus]</b> Zhang, Y., Ikemiya, Y., Xia, G., Murata, N., Martínez-Ramírez, M. A., Liao, W. H., ... & Dixon, S. (2024, August). <em></em>MusicMagus: zero-shot text-to-music editing via diffusion models</em>. In Proceedings of the Thirty-Third International Joint Conference on Artificial Intelligence (pp. 7805-7813).
+    </li>
+    <li id="ref2">
+        <b>[ZETA]</b> Manor, H., & Michaeli, T. (2024, July). <em>Zero-shot unsupervised and text-based audio editing using DDPM inversion</em>. In Proceedings of the 41st International Conference on Machine Learning (pp. 34603-34629).
+    </li>
+    <li id="ref3">
+       <b>[DDIM]</b> Song, J., Meng, C., & Ermon, S. <em>Denoising Diffusion Implicit Models</em>. In International Conference on Learning Representations.
+    </li>
+    <li id="ref4">
+        <b>[SDEdit]</b> Meng, C., He, Y., Song, Y., Song, J., Wu, J., Zhu, J. Y., & Ermon, S. <em>SDEdit: Guided Image Synthesis and Editing with Stochastic Differential Equations</em>. In International Conference on Learning Representations.
+    </li>
+    <li id="ref5">
+        <b>[DreamSound & Textual Inversion]</b> Plitsis, M., Kouzelis, T., Paraskevopoulos, G., Katsouros, V., & Panagakis, Y. (2024, April). <em>Investigating personalization methods in text to music generation</em>. In ICASSP 2024-2024 IEEE International Conference on Acoustics, Speech and Signal Processing (ICASSP) (pp. 1081-1085). IEEE.
+    </li>
+</ol>
+</div>
+</body>
+</html> 
